@@ -11,6 +11,8 @@ Ferramentas:
 - Respond to Webhook
 - **Desafio**: Salvar resultados em uma planilha do Google Sheets.
 
+### Em caso do video não rodar, aqui está o link no Youtube para assistir: https://youtu.be/e_YqJ3IY2Jo?si=G1Yn4rfqvhRr2Dsf
+
 ## Fluxo de execução da aplicação:
 <img width="1532" height="477" alt="Captura de tela 2025-11-28 235852" src="https://github.com/user-attachments/assets/fb05c076-ccc5-4125-94dd-5ce1559adc44" />
 
