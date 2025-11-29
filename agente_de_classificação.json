@@ -1,0 +1,216 @@
+{
+  "name": "agente_de_classificação",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "sentiment-classifier",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -96,
+        208
+      ],
+      "id": "21ffbf4b-3cdc-4570-bc48-add6c47b48c2",
+      "name": "Webhook",
+      "webhookId": "ee71493d-9025-434c-b6bd-d0a7a54acd76"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"mensagem\": \"Análise concluída com sucesso!\",\n  \"status\": 200\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        944,
+        208
+      ],
+      "id": "1f74ed7a-6256-43ea-af25-e021e073bfed",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um classificador. Analise este texto:'{{ $json.body.texto }}'\nClassifique o sentimento (positivo, negativo, neutro) e o tema (maximo 3 palavras).\nResponda APENAS um JSON escrito neste formato {\"sentimento\": \"...\", \"tema\": \"...\"}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3,
+      "position": [
+        144,
+        208
+      ],
+      "id": "9b8a1d4c-fbdb-418b-b1a3-b700e8c5786d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        144,
+        400
+      ],
+      "id": "6d82c3f5-b589-49eb-af48-c734c2ecac79",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "b7jjDbJQLGnYSrBr",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Vai buscar o texto que a IA respondeu\nconst textoDaIA = $input.first().json.output;\n\n// 2. Limpa a formatação\nconst textoLimpo = textoDaIA.replace(/```json/g, '').replace(/```/g, '').trim();\n\n// 3. Transforma em JSON\nlet resultado;\ntry {\n  resultado = JSON.parse(textoLimpo);\n} catch (erro) {\n  resultado = { sentimento: \"erro\", tema: \"erro\" };\n}\n\n// --- A MÁGICA NOVA AQUI ---\n// Busca o texto original lá do nó \"Webhook\" e adiciona ao resultado\ntry {\n   resultado.texto = $('Webhook').first().json.body.texto;\n} catch (e) {\n   resultado.texto = \"Texto não encontrado\";\n}\n\n// 4. Entrega tudo junto\nreturn {\n  json: resultado\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        208
+      ],
+      "id": "54fb52eb-725c-4d9a-8582-bcab3d813670",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1-7AsowZn9lns9jVOzRc2pChP4UCcmMUocClSbxBZdRQ",
+          "mode": "list",
+          "cachedResultName": "Analise_Sentimento",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-7AsowZn9lns9jVOzRc2pChP4UCcmMUocClSbxBZdRQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Respostas",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1-7AsowZn9lns9jVOzRc2pChP4UCcmMUocClSbxBZdRQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "sentimento",
+              "displayName": "sentimento",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tema",
+              "displayName": "tema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        704,
+        208
+      ],
+      "id": "c86ca8f9-028c-4050-99a0-312765c6b886",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "NwWzuJFWSiw2Oewi",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "38905d90-6f60-4d99-ac1f-197a201e6bb1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "66bf0c1937981eb2234d8fc61d3706e573994283c639fe9acda70d8516b1cd90"
+  },
+  "id": "rVYvREbmZuGoL9EK",
+  "tags": []
+}
